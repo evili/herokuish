@@ -204,7 +204,11 @@ buildpack-test() {
 	[[ "$USER" ]] || randomize-unprivileged
 	buildpack-setup > /dev/null
 	_select-buildpack
-
+        # override or create buildpack test from app.json
+        app_json_test_cmd = app-json "environments.test.scripts.test"
+        if [[ -n "$app_json_test_cmd" ]]; then
+            echo "$app_json_test_cmd" > "$selected_path/bin/test"
+        fi
 	if [[ ! -f "$selected_path/bin/test-compile" ]] || [[ ! -f "$selected_path/bin/test" ]]; then
 		echo "Selected buildpack does not support test feature"
 		exit 1

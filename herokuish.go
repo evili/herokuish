@@ -8,6 +8,7 @@ import (
 
 	"github.com/progrium/go-basher"
 	"gopkg.in/yaml.v2"
+        "encoding/json"
 )
 
 var Version string
@@ -66,6 +67,36 @@ func YamlGet(args []string) {
 	}
 }
 
+func AppJsonGet(args []string) {
+	bytes, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var m interface{}
+        err = json.Unmarshall(bytes, &m)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, arg := range args {
+		if m == nil {
+			break
+		}
+		m = m.(map[interface{}]interface{})[arg]
+	}
+        switch val := m.(type) {
+	case string:
+		fmt.Println(val)
+	case map[interface{}]interface{}:
+		for key := range val {
+			fmt.Printf("%s=%s\n", key, val[key])
+		}
+	case []interface{}:
+		for _, v := range val {
+			fmt.Printf("%s\n", v)
+		}
+	}
+}
+
 func AssetCat(args []string) {
 	for _, asset := range args {
 		data, err := Asset(asset)
@@ -81,6 +112,7 @@ func main() {
 	basher.Application(map[string]func([]string){
 		"yaml-keys": YamlKeys,
 		"yaml-get":  YamlGet,
+                "app-json":  AppJsonGet,
 		"asset-cat": AssetCat,
 	}, []string{
 		"include/herokuish.bash",
